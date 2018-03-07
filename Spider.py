@@ -1,5 +1,7 @@
 from bs4 import BeautifulSoup as BS
 from urllib.parse import urljoin, urlparse, urlunparse
+from WebParser import WebParser
+from itertools import chain
 import requests
 import Utils
 import os
@@ -21,7 +23,8 @@ class Spider:
         self._counter = 0
 
     def _save_web(self, txt):
-        pass
+        web = WebParser()
+        web.analyse(txt, self._url)
 
     def _prefetch(self):
         if self._url:
@@ -35,7 +38,7 @@ class Spider:
             if res.status_code == 200:
                 self._counter += 1
                 print('%d: %s' % (self._counter, self._url))
-                html = res.text
+                html = res.content.decode('utf8')
                 self._save_web(html)
                 root = BS(html, 'lxml')
                 for link in root.find_all('a'):
@@ -43,7 +46,7 @@ class Spider:
                     parsed_url = urlparse(url)
                     url = urlunparse([*parsed_url[0:3], "", "", ""])
                     if Utils.is_valid_url(
-                            url) and parsed_url.netloc == self._host and url not in self._viewed and url not in self._queue:
+                            url) and parsed_url.netloc == self._host and url not in chain(self._viewed, self._queue):
                         self._queue.append(url)
         elif self._url:
             self._viewed.append(self._url)
