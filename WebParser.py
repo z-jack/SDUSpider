@@ -57,7 +57,10 @@ class WebParser:
             else:
                 self._filter_and_tag(main_body)
 
-    def analyse(self, txt: str, url: str):
+    def analyse(self, txt: str, url: str) -> list:
+        if not txt or not url:
+            print('empty content in url<%s>' % url)
+            return []
         self.url = url
         parsed_url = urlparse(url)
         root = BS(txt, 'lxml')
@@ -95,7 +98,7 @@ class WebParser:
                         res = requests.post('http://view.sdu.edu.cn/system/resource/js/news/hotdynpullnews.jsp',
                                             data={'owner': 1251758245, 'viewid': pageid[path_arr[-1]],
                                                   'actionmethod': 'getnewslist'})
-                        if 200 <= res.status_code < 300:
+                        if res.status_code == 200:
                             json = res.json()
                             json = map(lambda x: x['title'], json)
                             self._tags = jieba.analyse.extract_tags('\n'.join(json), topK=50)
